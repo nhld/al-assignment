@@ -1,0 +1,21 @@
+name: run build
+on:
+  pull_request: ~
+  push: ~
+jobs:
+  build:
+    name: run build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: install node
+        uses: actions/setup-node@v4
+      - name: install yarn
+        run: npm install -g yarn
+      - name: install dependencies
+        run: yarn
+      - name: set execute permission
+        run: chmod +x ./runner
+      - name: execute run script
+        run: sh runner
