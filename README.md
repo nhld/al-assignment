@@ -8,13 +8,13 @@ yarn
 #### Execute runner script:
 
 ```sh
-sh runner <hotel_ids> <destinations_ids>
+sh runner <hotel_ids> <destination_ids>
 
 ```
 
-##### Params example:
+#### Params example:
 
-##### 1. Fetch 1 hotel
+#### 1. Fetch 1 hotel
 
 Input:
 
@@ -32,7 +32,7 @@ sh runner iJhz 1122
 
 Output: nothing since no hotel matches the given params.
 
-##### 2. Fetch all hotels
+#### 2. Fetch all hotels
 
 Input:
 
@@ -42,7 +42,7 @@ sh runner || sh runner none none || sh runner iJhz none || sh runner none 5432
 
 Output: return all hotels.
 
-##### 3. Fetch more than 2 hotels
+#### 3. Fetch more than 2 hotels
 
 Input:
 
