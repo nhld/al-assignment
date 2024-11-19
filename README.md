@@ -55,7 +55,7 @@ Output: return 2 hotels with matching `hotel_ids` and `destination_ids` respecti
 Input:
 
 ```sh
-sh runner iJhz,f8c9,Sjyx 5432,1122 || sh runner iJhz,f8c9 5432,1122
+sh runner iJhz,f8c9,SjyX 5432,1122 || sh runner iJhz,f8c9 5432,1122
 ```
 
-Output: return 3 hotels since `iJhz` and `Sjyx` share the same `destination_id = 5432`
+Output: return 3 hotels since `iJhz` and `SjyX` share the same `destination_id = 5432`
