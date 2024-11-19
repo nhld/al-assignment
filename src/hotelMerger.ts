@@ -7,7 +7,7 @@ class StringHelper {
   }
 }
 
-class MergeStrategy {
+class HotelMerger {
   static getLongerString(values: string[]): string {
     return values.reduce(
       (longest, current) => ((current?.length || 0) > (longest?.length || 0) ? current : longest),
@@ -35,26 +35,26 @@ class MergeStrategy {
 
   static mergeImages(images: IImages[]): IImages {
     return {
-      rooms: MergeStrategy.mergeArrays(images.map((img) => img.rooms || [])),
-      site: MergeStrategy.mergeArrays(images.map((img) => img.site || [])),
-      amenities: MergeStrategy.mergeArrays(images.map((img) => img.amenities || []))
+      rooms: HotelMerger.mergeArrays(images.map((img) => img.rooms || [])),
+      site: HotelMerger.mergeArrays(images.map((img) => img.site || [])),
+      amenities: HotelMerger.mergeArrays(images.map((img) => img.amenities || []))
     }
   }
 
   // static mergeAmenities(amenities: IAmenities[]): IAmenities {
   //   return {
-  //     general: MergeStrategy.getLongerArray(amenities.map((a) => a.general || [])),
-  //     room: MergeStrategy.getLongerArray(amenities.map((a) => a.room || []))
+  //     general: HotelMerger.getLongerArray(amenities.map((a) => a.general || [])),
+  //     room: HotelMerger.getLongerArray(amenities.map((a) => a.room || []))
   //   }
   // }
   static mergeAmenities(amenities: IAmenities[]): IAmenities {
     // Get the longer arrays first, then normalize and deduplicate
-    const longerGeneralArray = MergeStrategy.getLongerArray(amenities.map((a) => a.general || []))
-    const longerRoomArray = MergeStrategy.getLongerArray(amenities.map((a) => a.room || []))
+    const longerGeneralArray = HotelMerger.getLongerArray(amenities.map((a) => a.general || []))
+    const longerRoomArray = HotelMerger.getLongerArray(amenities.map((a) => a.room || []))
 
     return {
-      general: MergeStrategy.normalizeAndDeduplicateArray(longerGeneralArray),
-      room: MergeStrategy.normalizeAndDeduplicateArray(longerRoomArray)
+      general: HotelMerger.normalizeAndDeduplicateArray(longerGeneralArray),
+      room: HotelMerger.normalizeAndDeduplicateArray(longerRoomArray)
     }
   }
 
@@ -71,7 +71,7 @@ class MergeStrategy {
       lng: Helper.getFirstNotNone(validLocations, 'lng'),
       address: Helper.getFirstNotNone(validLocations, 'address') || '',
       city: Helper.getFirstNotNone(validLocations, 'city') || '',
-      country: MergeStrategy.getLongerString(countries) || ''
+      country: HotelMerger.getLongerString(countries) || ''
     }
   }
 }
@@ -110,18 +110,18 @@ export class HotelsService {
       if (groupedHotels.length === 1) {
         // this.data.push(groupedHotels[0])
         const hotel = groupedHotels[0]
-        hotel.amenities = MergeStrategy.mergeAmenities([hotel.amenities])
+        hotel.amenities = HotelMerger.mergeAmenities([hotel.amenities])
         this.data.push(hotel)
       } else {
         const mergedHotel: IHotel = {
           id: Helper.getFirstNotNone(groupedHotels, 'id') || '',
           destination_id: Helper.getFirstNotNone(groupedHotels, 'destination_id') || '',
-          name: MergeStrategy.getLongerString(groupedHotels.map((hotel) => hotel.name)),
-          location: MergeStrategy.mergeLocation(groupedHotels.map((hotel) => hotel.location)),
-          description: MergeStrategy.getLongerString(groupedHotels.map((hotel) => hotel.description)),
-          amenities: MergeStrategy.mergeAmenities(groupedHotels.map((hotel) => hotel.amenities)),
-          images: MergeStrategy.mergeImages(groupedHotels.map((hotel) => hotel.images)),
-          booking_conditions: MergeStrategy.mergeArrays(groupedHotels.map((hotel) => hotel.booking_conditions || []))
+          name: HotelMerger.getLongerString(groupedHotels.map((hotel) => hotel.name)),
+          location: HotelMerger.mergeLocation(groupedHotels.map((hotel) => hotel.location)),
+          description: HotelMerger.getLongerString(groupedHotels.map((hotel) => hotel.description)),
+          amenities: HotelMerger.mergeAmenities(groupedHotels.map((hotel) => hotel.amenities)),
+          images: HotelMerger.mergeImages(groupedHotels.map((hotel) => hotel.images)),
+          booking_conditions: HotelMerger.mergeArrays(groupedHotels.map((hotel) => hotel.booking_conditions || []))
         }
 
         this.data.push(mergedHotel)
