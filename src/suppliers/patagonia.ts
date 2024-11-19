@@ -1,16 +1,12 @@
 import { BaseSupplier } from './base'
 import { IHotel } from '../interfaces/interfaces'
 import { PatagoniaHotelData, PatagoniaImage } from '../interfaces/patagonia'
+import { DataCleaningHelper } from '../dataCleaningHelper'
 
 const PATAGONIA_API_URL = 'https://5f2be0b4ffc88500167b85a0.mockapi.io/suppliers/patagonia'
 
 export class Patagonia extends BaseSupplier {
   endpoint = (): string => PATAGONIA_API_URL
-
-  private cleanAmenities = (amenities: string[] | null | undefined): string[] => {
-    if (!amenities) return []
-    return amenities.map((amenity) => amenity?.toLowerCase() || '')
-  }
 
   parse = (data: PatagoniaHotelData): IHotel => {
     const { id, destination, name, lat, lng, address, city, country, info, amenities, images } = data
@@ -28,7 +24,7 @@ export class Patagonia extends BaseSupplier {
       },
       description: info || '',
       amenities: {
-        general: this.cleanAmenities(amenities) || [],
+        general: DataCleaningHelper.lowercaseArrayElements(amenities) || [],
         room: []
       },
       images: {

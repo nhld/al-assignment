@@ -1,12 +1,4 @@
 import { IHotel, ILocation, IAmenities, IImages } from './interfaces/interfaces'
-
-class StringHelper {
-  static normalizeString(str: string): string {
-    // return str.toLowerCase().replace(/\s+/g, '')
-    return str
-  }
-}
-
 class HotelMerger {
   static getLongerString(values: string[]): string {
     return values.reduce(
@@ -19,11 +11,9 @@ class HotelMerger {
     return [...new Set(arrays.flat())]
   }
 
-  static normalizeAndDeduplicateArray(arr: string[]): string[] {
-    const normalizedSet = new Set(
-      arr.map((item) => StringHelper.normalizeString(item)).filter((item) => item.length > 0)
-    )
-    return Array.from(normalizedSet)
+  static deduplicateArray(arr: string[]): string[] {
+    const unique = new Set(arr.filter((item) => item.length > 0))
+    return Array.from(unique)
   }
 
   static getLongerArray<T>(arrays: T[][]): T[] {
@@ -53,8 +43,8 @@ class HotelMerger {
     const longerRoomArray = HotelMerger.getLongerArray(amenities.map((a) => a.room || []))
 
     return {
-      general: HotelMerger.normalizeAndDeduplicateArray(longerGeneralArray),
-      room: HotelMerger.normalizeAndDeduplicateArray(longerRoomArray)
+      general: HotelMerger.deduplicateArray(longerGeneralArray),
+      room: HotelMerger.deduplicateArray(longerRoomArray)
     }
   }
 

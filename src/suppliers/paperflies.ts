@@ -1,21 +1,12 @@
 import { BaseSupplier } from './base'
 import { IHotel } from '../interfaces/interfaces'
 import { PaperfliesHotelData, PaperfliesImage } from '../interfaces/paperflies'
+import { DataCleaningHelper } from '../dataCleaningHelper'
 
 const PAPERFLIES_API_URL = 'https://5f2be0b4ffc88500167b85a0.mockapi.io/suppliers/paperflies'
 
 export class Paperflies extends BaseSupplier {
   endpoint = (): string => PAPERFLIES_API_URL
-
-  private cleanBookingConditions = (strings: string[]): string[] => {
-    return strings.map((str) =>
-      str
-        .split('===')
-        .filter((part) => part.trim().length > 0)
-        .map((part) => part.trim())
-        .join(' ')
-    )
-  }
 
   parse = (data: PaperfliesHotelData): IHotel => {
     const { hotel_id, destination_id, hotel_name, location, details, amenities, images, booking_conditions } = data
@@ -47,7 +38,7 @@ export class Paperflies extends BaseSupplier {
         })),
         amenities: []
       },
-      booking_conditions: this.cleanBookingConditions(booking_conditions) || []
+      booking_conditions: DataCleaningHelper.removeTripleEqualSigns(booking_conditions) || []
     }
   }
 }
