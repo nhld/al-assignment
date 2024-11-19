@@ -126,9 +126,9 @@ export class HotelsService {
   }
 
   find = (hotelIds: string[], destinationIds: string[]): IHotel[] => {
-    // if (hotelIds.length === 1 && hotelIds[0] === '' && destinationIds.length === 1 && destinationIds[0] === '') {
-    //   return this.data
-    // }
+    if (hotelIds.length === 1 && hotelIds[0] === '' && destinationIds.length === 1 && destinationIds[0] === '') {
+      return this.data
+    }
 
     if (hotelIds.includes('none') || destinationIds.includes('none')) {
       return this.data
