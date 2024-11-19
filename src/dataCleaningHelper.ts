@@ -1,8 +1,5 @@
 export class DataCleaningHelper {
-  static cleanData(data: string): string {
-    return data.trim()
-  }
-
+  // '===' => " "
   static removeTripleEqualSigns = (strings: string[]): string[] => {
     return strings.map((str) =>
       str
@@ -13,11 +10,13 @@ export class DataCleaningHelper {
     )
   }
 
+  // ["Abc", "Xyz"] => ["abc", "xyz"]
   static lowercaseArrayElements = (strings: string[] | null | undefined): string[] => {
     if (!strings) return []
     return strings.map((str) => str?.toLowerCase() || '')
   }
 
+  // camelCase => camel case
   static normalizeCamelCaseStrings = (strings: string[]): string[] => {
     return strings.map((str) =>
       str
