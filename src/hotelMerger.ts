@@ -1,6 +1,7 @@
 import { IHotel, ILocation, IAmenities, IImages, IImage } from './interfaces/interfaces'
+
 class HotelMerger {
-  static getLongestString(strings: string[]): string {
+  static getLongestString = (strings: string[]): string => {
     let longestString = ''
     for (const str of strings) {
       if ((str?.length || 0) > longestString.length) {
@@ -10,16 +11,16 @@ class HotelMerger {
     return longestString
   }
 
-  static mergeArrays<T>(arrays: T[][]): T[] {
+  static mergeArrays = <T>(arrays: T[][]): T[] => {
     return [...new Set(arrays.flat())]
   }
 
-  static deduplicateArray(arr: string[]): string[] {
+  static deduplicateArray = (arr: string[]): string[] => {
     const unique = new Set(arr.filter((item) => item.length > 0))
     return Array.from(unique)
   }
 
-  static getLongestArray(arrays: string[][]): string[] {
+  static getLongestArray = (arrays: string[][]): string[] => {
     let longest: string[] = []
     for (const arr of arrays) {
       if (!arr) continue
@@ -30,26 +31,26 @@ class HotelMerger {
     return longest
   }
 
-  static mergeImages(images: IImages[]): IImages {
-    const deduplicateImagesByUrl = (imageArray: IImage[]) => {
-      const uniqueUrls = new Set<string>()
-      return imageArray.filter((img) => {
-        if (!img.link || uniqueUrls.has(img.link)) {
-          return false
-        }
-        uniqueUrls.add(img.link)
-        return true
-      })
-    }
+  private static deduplicateImagesByUrl = (imageArray: IImage[]) => {
+    const uniqueUrls = new Set<string>()
+    return imageArray.filter((img) => {
+      if (!img.link || uniqueUrls.has(img.link)) {
+        return false
+      }
+      uniqueUrls.add(img.link)
+      return true
+    })
+  }
 
+  static mergeImages = (images: IImages[]): IImages => {
     return {
-      rooms: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.rooms || []))),
-      site: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.site || []))),
-      amenities: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.amenities || [])))
+      rooms: this.deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.rooms || []))),
+      site: this.deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.site || []))),
+      amenities: this.deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.amenities || [])))
     }
   }
 
-  static mergeAmenities(amenities: IAmenities[]): IAmenities {
+  static mergeAmenities = (amenities: IAmenities[]): IAmenities => {
     const longerGeneralArray = HotelMerger.getLongestArray(amenities.map((a) => a.general || []))
     const longerRoomArray = HotelMerger.getLongestArray(amenities.map((a) => a.room || []))
     return {
@@ -58,7 +59,7 @@ class HotelMerger {
     }
   }
 
-  static getFirstValidValue(hotels: any[], fields: string): any {
+  static getFirstValidValue = (hotels: any[], fields: string): any => {
     const fieldPath = fields.split('.')
 
     for (const hotel of hotels) {
@@ -80,7 +81,7 @@ class HotelMerger {
     return null
   }
 
-  static mergeLocation(locations: ILocation[]): ILocation {
+  static mergeLocation = (locations: ILocation[]): ILocation => {
     const validLocations = locations.filter((loc) => loc !== null && loc !== undefined)
     if (validLocations.length === 0) return {} as ILocation
 
@@ -101,28 +102,44 @@ class HotelMerger {
 export class HotelsService {
   private data: IHotel[] = []
 
-  mergeAndSave = (hotels: IHotel[]): void => {
-    const map = new Map<string, IHotel[]>()
-
-    for (const hotel of hotels) {
-      const key = `${hotel.id}|${hotel.destination_id}`
-      const existing = map.get(key) || []
-      map.set(key, [...existing, hotel])
+  private createGroupKey = (hotel: IHotel): string => {
+    if (!hotel.id || !hotel.destination_id) {
+      throw new Error('Hotel missing required ID fields')
     }
+    return `${hotel.id}|${hotel.destination_id}`
+  }
 
-    for (const groupedHotels of map.values()) {
+  private groupHotels = (hotels: IHotel[]): Map<string, IHotel[]> => {
+    return hotels.reduce((groups, currentHotel) => {
+      const key = this.createGroupKey(currentHotel)
+      const existing = groups.get(key) || []
+      groups.set(key, [...existing, currentHotel])
+      return groups
+    }, new Map<string, IHotel[]>())
+  }
+
+  private merge = (groups: Map<string, IHotel[]>): void => {
+    for (const groupedHotels of groups.values()) {
       const mergedHotel: IHotel = {
         id: HotelMerger.getFirstValidValue(groupedHotels, 'id') || '',
         destination_id: HotelMerger.getFirstValidValue(groupedHotels, 'destination_id') || '',
-        name: HotelMerger.getLongestString(groupedHotels.map((hotel) => hotel.name)),
-        location: HotelMerger.mergeLocation(groupedHotels.map((hotel) => hotel.location)),
-        description: HotelMerger.getLongestString(groupedHotels.map((hotel) => hotel.description)),
-        amenities: HotelMerger.mergeAmenities(groupedHotels.map((hotel) => hotel.amenities)),
-        images: HotelMerger.mergeImages(groupedHotels.map((hotel) => hotel.images)),
-        booking_conditions: HotelMerger.mergeArrays(groupedHotels.map((hotel) => hotel.booking_conditions || []))
+        name: HotelMerger.getLongestString(groupedHotels.map((h) => h.name)),
+        location: HotelMerger.mergeLocation(groupedHotels.map((h) => h.location)),
+        description: HotelMerger.getLongestString(groupedHotels.map((h) => h.description)),
+        amenities: HotelMerger.mergeAmenities(groupedHotels.map((h) => h.amenities)),
+        images: HotelMerger.mergeImages(groupedHotels.map((h) => h.images)),
+        booking_conditions: HotelMerger.mergeArrays(groupedHotels.map((h) => h.booking_conditions || []))
       }
       this.data.push(mergedHotel)
     }
+  }
+
+  mergeAndSave = (hotels: IHotel[]): void => {
+    if (!hotels || hotels.length === 0) {
+      throw new Error('No hotels to merge')
+    }
+    const hotelGroups = this.groupHotels(hotels)
+    this.merge(hotelGroups)
   }
 
   find = (hotelIds: string[], destinationIds: string[]): IHotel[] => {
@@ -134,10 +151,11 @@ export class HotelsService {
       return this.data
     }
 
-    const isHotelIdMatch = (hotel: IHotel) => hotelIds.length === 0 || hotelIds.includes(hotel.id)
-    const isDestinationIdMatch = (hotel: IHotel) =>
-      destinationIds.length === 0 || destinationIds.includes(hotel.destination_id)
+    return this.data.filter((hotel) => {
+      const matchesHotelId = hotelIds.length === 0 || hotelIds.includes(hotel.id)
+      const matchesDestinationId = destinationIds.length === 0 || destinationIds.includes(hotel.destination_id)
 
-    return this.data.filter((hotel) => isHotelIdMatch(hotel) && isDestinationIdMatch(hotel))
+      return matchesHotelId && matchesDestinationId
+    })
   }
 }
