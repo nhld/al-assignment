@@ -20,12 +20,12 @@ const fetchHotels = async (hotelIds: string[] = [], destinationIds: string[] = [
   return svc.find(hotelIds, destinationIds)
 }
 
-const main = async () => {
+const main = async (): Promise<void> => {
   try {
     const args = process.argv.slice(2)
-    const hotels_ids = args[0]?.split(',') || ['none']
-    const destination_ids = args[1]?.split(',') || ['none']
-    const res = await fetchHotels(hotels_ids, destination_ids)
+    const hotelsIds = args[0]?.split(',') || ['none']
+    const destinationIds = args[1]?.split(',') || ['none']
+    const res = await fetchHotels(hotelsIds, destinationIds)
     console.log(JSON.stringify(res, null, 2))
   } catch (err) {
     console.log(err)
@@ -33,4 +33,4 @@ const main = async () => {
   }
 }
 
-main()
+main().catch(console.error)
