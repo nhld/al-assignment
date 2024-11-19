@@ -5,13 +5,12 @@
   "type": "commonjs",
   "scripts": {
     "build": "yarn tsc",
-    "start": "yarn node dist/index.js -r dotenv/config dotenv_config_path=local.env"
+    "start": "yarn node dist/index.js"
   },
   "devDependencies": {
     "@types/axios": "^0.14.4",
     "@types/node": "^22.9.0",
     "axios": "^1.7.7",
-    "dotenv": "^16.4.5",
     "typescript": "^5.6.3"
   }
 }
