@@ -1,10 +1,13 @@
-import { IHotel, ILocation, IAmenities, IImages } from './interfaces/interfaces'
+import { IHotel, ILocation, IAmenities, IImages, IImage } from './interfaces/interfaces'
 class HotelMerger {
-  static getLongerString(values: string[]): string {
-    return values.reduce(
-      (longest, current) => ((current?.length || 0) > (longest?.length || 0) ? current : longest),
-      ''
-    )
+  static getLongestString(strings: string[]): string {
+    let longestString = ''
+    for (const str of strings) {
+      if ((str?.length || 0) > longestString.length) {
+        longestString = str
+      }
+    }
+    return longestString
   }
 
   static mergeArrays<T>(arrays: T[][]): T[] {
@@ -16,36 +19,65 @@ class HotelMerger {
     return Array.from(unique)
   }
 
-  static getLongerArray<T>(arrays: T[][]): T[] {
-    return arrays.reduce(
-      (longest, current) => ((current?.length || 0) > (longest?.length || 0) ? current : longest),
-      []
-    )
+  static getLongestArray(arrays: string[][]): string[] {
+    let longest: string[] = []
+    for (const arr of arrays) {
+      if (!arr) continue
+      if (arr.length > longest.length) {
+        longest = arr
+      }
+    }
+    return longest
   }
 
   static mergeImages(images: IImages[]): IImages {
+    const deduplicateImagesByUrl = (imageArray: IImage[]) => {
+      const uniqueUrls = new Set<string>()
+      return imageArray.filter((img) => {
+        if (!img.link || uniqueUrls.has(img.link)) {
+          return false
+        }
+        uniqueUrls.add(img.link)
+        return true
+      })
+    }
+
     return {
-      rooms: HotelMerger.mergeArrays(images.map((img) => img.rooms || [])),
-      site: HotelMerger.mergeArrays(images.map((img) => img.site || [])),
-      amenities: HotelMerger.mergeArrays(images.map((img) => img.amenities || []))
+      rooms: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.rooms || []))),
+      site: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.site || []))),
+      amenities: deduplicateImagesByUrl(HotelMerger.mergeArrays(images.map((img) => img.amenities || [])))
     }
   }
 
-  // static mergeAmenities(amenities: IAmenities[]): IAmenities {
-  //   return {
-  //     general: HotelMerger.getLongerArray(amenities.map((a) => a.general || [])),
-  //     room: HotelMerger.getLongerArray(amenities.map((a) => a.room || []))
-  //   }
-  // }
   static mergeAmenities(amenities: IAmenities[]): IAmenities {
-    // Get the longer arrays first, then normalize and deduplicate
-    const longerGeneralArray = HotelMerger.getLongerArray(amenities.map((a) => a.general || []))
-    const longerRoomArray = HotelMerger.getLongerArray(amenities.map((a) => a.room || []))
-
+    const longerGeneralArray = HotelMerger.getLongestArray(amenities.map((a) => a.general || []))
+    const longerRoomArray = HotelMerger.getLongestArray(amenities.map((a) => a.room || []))
     return {
       general: HotelMerger.deduplicateArray(longerGeneralArray),
       room: HotelMerger.deduplicateArray(longerRoomArray)
     }
+  }
+
+  static getFirstValidValue(hotels: any[], fields: string): any {
+    const fieldPath = fields.split('.')
+
+    for (const hotel of hotels) {
+      let value: any = hotel
+      for (const field of fieldPath) {
+        value = value?.[field]
+        if (value === undefined || value === null || value === '') break
+      }
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== '' &&
+        (typeof value !== 'object' || Object.keys(value).length > 0)
+      ) {
+        return value
+      }
+    }
+    return null
   }
 
   static mergeLocation(locations: ILocation[]): ILocation {
@@ -57,35 +89,12 @@ class HotelMerger {
       .filter((country) => country !== null && country !== undefined && country.trim() !== '')
 
     return {
-      lat: Helper.getFirstNotNone(validLocations, 'lat'),
-      lng: Helper.getFirstNotNone(validLocations, 'lng'),
-      address: Helper.getFirstNotNone(validLocations, 'address') || '',
-      city: Helper.getFirstNotNone(validLocations, 'city') || '',
-      country: HotelMerger.getLongerString(countries) || ''
+      lat: HotelMerger.getFirstValidValue(validLocations, 'lat'),
+      lng: HotelMerger.getFirstValidValue(validLocations, 'lng'),
+      address: HotelMerger.getFirstValidValue(validLocations, 'address') || '',
+      city: HotelMerger.getFirstValidValue(validLocations, 'city') || '',
+      country: HotelMerger.getLongestString(countries) || ''
     }
-  }
-}
-
-class Helper {
-  static getFirstNotNone(hotels: any[], fields: string): any {
-    const fieldPath = fields.split('.')
-
-    for (const hotel of hotels) {
-      let value: any = hotel
-      for (const field of fieldPath) {
-        value = value?.[field]
-        if (value === undefined || value === null || value === '') break
-      }
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== '' &&
-        (typeof value !== 'object' || Object.keys(value).length > 0)
-      ) {
-        return value
-      }
-    }
-    return null
   }
 }
 
@@ -102,41 +111,33 @@ export class HotelsService {
     }
 
     for (const groupedHotels of map.values()) {
-      if (groupedHotels.length === 1) {
-        // this.data.push(groupedHotels[0])
-        const hotel = groupedHotels[0]
-        hotel.amenities = HotelMerger.mergeAmenities([hotel.amenities])
-        this.data.push(hotel)
-      } else {
-        const mergedHotel: IHotel = {
-          id: Helper.getFirstNotNone(groupedHotels, 'id') || '',
-          destination_id: Helper.getFirstNotNone(groupedHotels, 'destination_id') || '',
-          name: HotelMerger.getLongerString(groupedHotels.map((hotel) => hotel.name)),
-          location: HotelMerger.mergeLocation(groupedHotels.map((hotel) => hotel.location)),
-          description: HotelMerger.getLongerString(groupedHotels.map((hotel) => hotel.description)),
-          amenities: HotelMerger.mergeAmenities(groupedHotels.map((hotel) => hotel.amenities)),
-          images: HotelMerger.mergeImages(groupedHotels.map((hotel) => hotel.images)),
-          booking_conditions: HotelMerger.mergeArrays(groupedHotels.map((hotel) => hotel.booking_conditions || []))
-        }
-
-        this.data.push(mergedHotel)
+      const mergedHotel: IHotel = {
+        id: HotelMerger.getFirstValidValue(groupedHotels, 'id') || '',
+        destination_id: HotelMerger.getFirstValidValue(groupedHotels, 'destination_id') || '',
+        name: HotelMerger.getLongestString(groupedHotels.map((hotel) => hotel.name)),
+        location: HotelMerger.mergeLocation(groupedHotels.map((hotel) => hotel.location)),
+        description: HotelMerger.getLongestString(groupedHotels.map((hotel) => hotel.description)),
+        amenities: HotelMerger.mergeAmenities(groupedHotels.map((hotel) => hotel.amenities)),
+        images: HotelMerger.mergeImages(groupedHotels.map((hotel) => hotel.images)),
+        booking_conditions: HotelMerger.mergeArrays(groupedHotels.map((hotel) => hotel.booking_conditions || []))
       }
+      this.data.push(mergedHotel)
     }
   }
 
   find = (hotelIds: string[], destinationIds: string[]): IHotel[] => {
+    // if (hotelIds.length === 1 && hotelIds[0] === '' && destinationIds.length === 1 && destinationIds[0] === '') {
+    //   return this.data
+    // }
+
     if (hotelIds.includes('none') || destinationIds.includes('none')) {
       return this.data
     }
 
-    if (hotelIds.length === 1 && destinationIds.length === 1) {
-      return this.data
-    }
+    const isHotelIdMatch = (hotel: IHotel) => hotelIds.length === 0 || hotelIds.includes(hotel.id)
+    const isDestinationIdMatch = (hotel: IHotel) =>
+      destinationIds.length === 0 || destinationIds.includes(hotel.destination_id)
 
-    return this.data.filter(
-      (hotel) =>
-        (hotelIds.length === 0 || hotelIds.includes(hotel.id)) &&
-        (destinationIds.length === 0 || destinationIds.includes(hotel.destination_id))
-    )
+    return this.data.filter((hotel) => isHotelIdMatch(hotel) && isDestinationIdMatch(hotel))
   }
 }
