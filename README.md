@@ -12,8 +12,8 @@ sh runner <hotel_ids> <destination_ids>
 
 ```
 
-`<hotel_ids>`: list of ids separate by `,`.
-`<destination_ids>`: list of destination ids separate by `,`.
+`<hotel_ids>`: list of IDs separate by `,`.\
+`<destination_ids>`: list of destination IDs separate by `,`.
 
 > [!NOTE]
 > These lists do not need to be the same size.
