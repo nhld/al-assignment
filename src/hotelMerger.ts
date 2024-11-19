@@ -74,9 +74,14 @@ class Helper {
       let value: any = hotel
       for (const field of fieldPath) {
         value = value?.[field]
-        if (value === undefined || value === null) break
+        if (value === undefined || value === null || value === '') break
       }
-      if (value !== undefined && value !== null && (typeof value !== 'object' || Object.keys(value).length > 0)) {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== '' &&
+        (typeof value !== 'object' || Object.keys(value).length > 0)
+      ) {
         return value
       }
     }

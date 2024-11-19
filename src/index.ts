@@ -5,7 +5,7 @@ import { Paperflies } from './suppliers/paperflies'
 import { IHotel } from './interfaces/interfaces'
 import { HotelsService } from './hotelMerger'
 
-const fetchHotels = async (hotelIds: string[] = [], destinationIds: string[] = []): Promise<string> => {
+const fetchHotels = async (hotelIds: string[] = [], destinationIds: string[] = []): Promise<IHotel[]> => {
   const suppliers: BaseSupplier[] = [new Acme(), new Paperflies(), new Patagonia()]
 
   const allSupplierData: IHotel[] = []
@@ -17,9 +17,7 @@ const fetchHotels = async (hotelIds: string[] = [], destinationIds: string[] = [
   const svc = new HotelsService()
   svc.mergeAndSave(allSupplierData)
 
-  const filtered = svc.find(hotelIds, destinationIds)
-
-  return JSON.stringify(filtered, null, 2)
+  return svc.find(hotelIds, destinationIds)
 }
 
 const main = async () => {
@@ -31,7 +29,8 @@ const main = async () => {
   const destination_ids = args[1]?.split(',') || ['none']
 
   const res = await fetchHotels(hotels_ids, destination_ids)
-  console.log(res)
+
+  console.log(JSON.stringify(res, null, 2))
 }
 
 main()
