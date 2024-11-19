@@ -1,5 +1,4 @@
 import axios from 'axios'
-
 import { IHotel } from '../interfaces/interfaces'
 
 export abstract class BaseSupplier {
@@ -7,7 +6,7 @@ export abstract class BaseSupplier {
 
   abstract parse(data: any): IHotel
 
-  async fetch(): Promise<IHotel[]> {
+  fetch = async (): Promise<IHotel[]> => {
     try {
       const resp = await axios.get(this.endpoint())
       return resp.data.map((data: any) => this.parse(data))
